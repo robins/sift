@@ -14,12 +14,22 @@ CREATE TABLE Task(
   UpdatedTS   TIMESTAMPTZ
 );
 
-CREATE TABLE Alert (
-  AlertID     BIGSERIAL     PRIMARY KEY,
-  Name        TEXT,
+CREATE TABLE Dependency(
+  DependentTaskID   BIGINT  REFERENCES Task(TaskID),
+  DependencyTaskID  BIGINT  REFERENCES Task(TaskID),
+  CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
+  UpdatedTS   TIMESTAMPTZ,
+  PRIMARY KEY (DependencyTaskID, DependentTaskID),
+  CHECK (DependencyTaskID IS DISTINCT FROM DependentTaskID)
+);
+
+CREATE TABLE Duration(
+  TaskID      BIGINT        PRIMARY KEY REFERENCES Task(TaskID),
+  Duration    INTERVAL,
   CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
   UpdatedTS   TIMESTAMPTZ
 );
+
 
 CREATE TABLE Deadline (
   TaskID      BIGINT        REFERENCES Task(TaskID),
@@ -30,15 +40,7 @@ CREATE TABLE Deadline (
   PRIMARY KEY (TaskID, Deadline)
 );
 
-CREATE TABLE Dependency(
-  DependentTaskID   BIGINT  REFERENCES Task(TaskID),
-  DependencyTaskID  BIGINT  REFERENCES Task(TaskID),
-  CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
-  UpdatedTS   TIMESTAMPTZ,
-  PRIMARY KEY (DependencyTaskID, DependentTaskID),
-  CHECK (DependencyTaskID IS DISTINCT FROM DependentTaskID)
-);
-
+/*
 CREATE TABLE ActionableTimeInDay(
   TaskID      BIGINT        REFERENCES Task(TaskID),
   BeginTime   TIMESTAMPTZ,
@@ -71,12 +73,11 @@ CREATE TABLE ActionablePlace(
   PRIMARY KEY (TaskID, PlaceID)
 );
 
-CREATE TABLE Duration(
-  TaskID      BIGINT        PRIMARY KEY REFERENCES Task(TaskID),
-  Duration    INTERVAL,
+CREATE TABLE Alert (
+  AlertID     BIGSERIAL     PRIMARY KEY,
+  Name        TEXT,
   CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
   UpdatedTS   TIMESTAMPTZ
 );
-
+*/
 COMMIT;
-

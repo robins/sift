@@ -4,6 +4,7 @@ BEGIN;
 
 SET search_path = 'sift';
 
+
 DROP FUNCTION IF EXISTS AddTask(TEXT);
 CREATE FUNCTION AddTask(_Description TEXT) 
 RETURNS BIGINT AS
@@ -15,10 +16,10 @@ BEGIN
   RETURNING TaskID
     AS TaskID;
   
-  RETURN TaskID;
-    
+  RETURN TaskID;    
 END;
 $$ LANGUAGE PLPGSQL;
+
 
 DROP FUNCTION IF EXISTS AddDependency (BIGINT);
 CREATE FUNCTION AddDependency(_DependentTaskID BIGINT, _DependencyTaskID  BIGINT)
@@ -33,6 +34,45 @@ END;
 $$ LANGUAGE PLPGSQL;
 
 
+DROP FUNCTION IF EXISTS AddTaskDuration(BIGINT, INTERVAL);
+CREATE FUNCTION AddTaskDuration(_TaskID BIGINT, _Duration INTERVAL)
+RETURNS BOOLEAN AS
+$$
+BEGIN
+  INSERT INTO Duration(TaskID, Duration)
+  VALUES(_TaskID, _Duration)
+  ON CONFLICT (TaskID)
+    DO UPDATE SET Duration = _Duration;
+  
+  RETURN FOUND;
+END;
+$$ LANGUAGE PLPGSQL;
+
+DROP FUNCTION IF EXISTS GetTaskDuration(BIGINT);
+CREATE FUNCTION GetTaskDuration(_TaskID BIGINT) 
+RETURNS INTERVAL AS
+$$
+  SELECT Duration 
+  FROM Duration
+  WHERE TaskID = _TaskID;
+$$ LANGUAGE SQL;
+
+
+DROP FUNCTION IF EXISTS AddTaskDeadline (BIGINT, INTERVAL, BIGINT);
+CREATE FUNCTION AddTaskDeadline (TaskID BIGINT, Deadline INTERVAL, AlertID BIGINT)
+RETURNS BOOLEAN AS
+$$
+BEGIN
+  INSERT INTO Deadline (TaskID, Deadline, AlertID)
+  VALUES (_TaskID, _Deadline, _AlertID)
+  ON CONFLICT (TaskID)
+    DO UPDATE SET 
+        Deadline = _Deadline,
+        AlertID = _AlertID;
+    
+  RETURN FOUND;
+END;
+$$ LANGUAGE PLPGSQL;
 
 /*
 CREATE FUNCTION ActionableTimeInDay(
@@ -67,13 +107,6 @@ CREATE FUNCTION ActionablePlace(
   PRIMARY KEY (TaskID, PlaceID)
 );
 
-CREATE FUNCTION Duration(
-  TaskID      BIGINT        PRIMARY KEY REFERENCES Task(TaskID),
-  Duration    INTERVAL,
-  CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
-  UpdatedTS   TIMESTAMPTZ
-);
-
 CREATE FUNCTION Alert (_AlertID BIGINT, _Name TEXT)
 RETURNS BOOLEAN AS 
 $$
@@ -85,14 +118,6 @@ BEGIN
 END;
 $$ LANGUAGE PLPGSQL;
 
-CREATE FUNCTION Deadline (
-  TaskID      BIGINT        REFERENCES Task(TaskID),
-  Deadline    INTERVAL,
-  AlertID     BIGINT        REFERENCES Alert(AlertID),
-  CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
-  UpdatedTS   TIMESTAMPTZ,
-  PRIMARY KEY (TaskID, Deadline)
-);
 
 */
 COMMIT;

@@ -15,4 +15,22 @@ $$
   LIMIT 1;
 $$ LANGUAGE SQL;
 
+
+DROP FUNCTION IF EXISTS GetRandomAlertID();
+CREATE FUNCTION GetRandomAlertID() 
+RETURNS BIGINT AS
+$$
+  SELECT AlertID 
+  FROM Alert
+  ORDER BY RANDOM()
+  LIMIT 1;
+$$ LANGUAGE SQL;
+
+
+SELECT AddTaskDeadline(
+  GetRandomTaskID(),
+  GetRandomInterval(),
+  GetRandomAlertID()
+);
+
 COMMIT;
