@@ -49,7 +49,7 @@ CREATE TABLE Deadline (
 
 CREATE TABLE Place(
   PlaceID     BIGSERIAL     PRIMARY KEY,
-  Name        TEXT,
+  Name        TEXT          UNIQUE,
   CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
   UpdatedTS   TIMESTAMPTZ
 );

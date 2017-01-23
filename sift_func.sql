@@ -36,7 +36,9 @@ BEGIN
   INSERT INTO Duration(TaskID, Duration)
   VALUES(_TaskID, _Duration)
   ON CONFLICT (TaskID)
-    DO UPDATE SET Duration = _Duration;
+    DO UPDATE SET 
+      Duration  = _Duration,
+      UpdatedTS = NOW();
   
   RETURN FOUND;
 END;
@@ -60,8 +62,9 @@ BEGIN
   VALUES (_TaskID, _Deadline, _AlertID)
   ON CONFLICT (TaskID)
     DO UPDATE SET 
-        Deadline = _Deadline,
-        AlertID = _AlertID;
+        Deadline  = _Deadline,
+        AlertID   = _AlertID,
+        UpdatedTS = NOW();
     
   RETURN FOUND;
 END;
@@ -75,6 +78,9 @@ DECLARE _PlaceID BIGINT := -1;
 BEGIN
   INSERT INTO Place(Name)
   VALUES (_Name)
+  ON CONFLICT (Name)
+  DO UPDATE SET
+    UpdatedTS = NOW()
   RETURNING PlaceID
     INTO _PlaceID;
   
@@ -106,7 +112,8 @@ BEGIN
   VALUES (_TaskID, _PlaceID)
   ON CONFLICT (TaskID)
   DO UPDATE SET
-    PlaceID = _PlaceID;
+    PlaceID   = _PlaceID,
+    UpdatedTS = NOW();
   
   RETURN FOUND;
 END;
