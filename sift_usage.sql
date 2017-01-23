@@ -66,57 +66,20 @@ BEGIN
     SELECT 
       TaskID
     FROM Task
-      JOIN Deadline
-        USING (TaskID)
       JOIN ActionablePlace
         USING (TaskID)
       JOIN Place
         USING (PlaceID)
     WHERE PlaceID IS NOT DISTINCT FROM _PlaceID
-    ORDER BY Deadline DESC;
+    ORDER BY Deadline ASC;
 END;
 $$ LANGUAGE PLPGSQL;
 
 
-DROP FUNCTION IF EXISTS AddTask1Stop(TEXT,INTERVAL, TEXT, TEXT);
-CREATE FUNCTION AddTask1Stop(
-  _TaskName TEXT,
-  _Interval INTERVAL DEFAULT NULL,
-  _Place    TEXT DEFAULT NULL,
-  _Alert    TEXT DEFAULT NULL
-)
-RETURNS BIGINT AS
+CREATE FUNCTION GetAnyFutureDate()
+RETURNS TIMESTAMPTZ AS
 $$
-DECLARE _TaskID  BIGINT := -1;
-DECLARE _AlertID BIGINT := -1;
-DECLARE _PlaceID BIGINT := -1;
-BEGIN
-  SELECT AddTask(_TaskName)
-    INTO _TaskID;
-  
-  IF _TaskID IS NOT DISTINCT FROM -1 THEN
-    RAISE 'Unable to create Task';
-  END IF;
-  
-  SELECT AddAlert(_Alert)
-    INTO _AlertID;
-  
-  PERFORM AddTaskDeadline(
-    _TaskID,
-    _Interval,
-    _AlertID
-  );
-
-  SELECT AddPlace(_Place)
-    INTO _PlaceID;
-    
-  PERFORM AddTaskActionablePlace(
-    _TaskID,
-    _PlaceID
-  );
-
-  RETURN _TaskID;
-END;
-$$ LANGUAGE PLPGSQL;
+  SELECT (NOW() + ((random() * 1000) || ' hours')::INTERVAL)::TIMESTAMPTZ
+$$ LANGUAGE SQL;
 
 COMMIT;

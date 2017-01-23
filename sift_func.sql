@@ -2,17 +2,57 @@ BEGIN;
 
 SET search_path = 'sift';
 
-CREATE FUNCTION AddTask(_Name TEXT) 
+CREATE FUNCTION AddTask(_Name TEXT, _Deadline TIMESTAMPTZ) 
 RETURNS BIGINT AS
 $$
 DECLARE _TaskID BIGINT := -1;
 BEGIN
-  INSERT INTO Task(Name)
-  VALUES (_Name)
+  INSERT INTO Task(Name, Deadline)
+  VALUES (_Name, _Deadline)
   RETURNING TaskID
     INTO _TaskID;
   
   RETURN _TaskID;    
+END;
+$$ LANGUAGE PLPGSQL;
+
+CREATE FUNCTION AddTask1Stop(
+  _TaskName TEXT,
+  _Deadline TIMESTAMPTZ DEFAULT NULL,
+  _Duration INTERVAL    DEFAULT NULL,
+  _Place    TEXT        DEFAULT NULL,
+  _Alert    TEXT        DEFAULT NULL
+)
+RETURNS BIGINT AS
+$$
+DECLARE _TaskID  BIGINT := -1;
+DECLARE _AlertID BIGINT := -1;
+DECLARE _PlaceID BIGINT := -1;
+BEGIN
+  SELECT AddTask(_TaskName, _Deadline)
+    INTO _TaskID;
+  
+  IF _TaskID IS NOT DISTINCT FROM -1 THEN
+    RAISE 'Unable to create Task';
+  END IF;
+  
+  SELECT AddAlert(_Alert)
+    INTO _AlertID;
+  
+  PERFORM AddTaskDuration(
+    _TaskID,
+    _Duration
+  );
+
+  SELECT AddPlace(_Place)
+    INTO _PlaceID;
+    
+  PERFORM AddTaskActionablePlace(
+    _TaskID,
+    _PlaceID
+  );
+
+  RETURN _TaskID;
 END;
 $$ LANGUAGE PLPGSQL;
 
@@ -52,23 +92,6 @@ $$
   FROM Duration
   WHERE TaskID = _TaskID;
 $$ LANGUAGE SQL;
-
-
-CREATE FUNCTION AddTaskDeadline (_TaskID BIGINT, _Deadline INTERVAL, _AlertID BIGINT)
-RETURNS BOOLEAN AS
-$$
-BEGIN
-  INSERT INTO Deadline (TaskID, Deadline, AlertID)
-  VALUES (_TaskID, _Deadline, _AlertID)
-  ON CONFLICT (TaskID)
-    DO UPDATE SET 
-        Deadline  = _Deadline,
-        AlertID   = _AlertID,
-        UpdatedTS = NOW();
-    
-  RETURN FOUND;
-END;
-$$ LANGUAGE PLPGSQL;
 
 
 CREATE FUNCTION AddPlace(_Name TEXT)
@@ -153,6 +176,23 @@ CREATE FUNCTION ActinableTimeInWeek(
   UpdatedTS   TIMESTAMPTZ,
   PRIMARY KEY (TaskID, DayOfWeek)
 );
+
+CREATE FUNCTION AddTaskDeadline (_TaskID BIGINT, _Deadline INTERVAL, _AlertID BIGINT)
+RETURNS BOOLEAN AS
+$$
+BEGIN
+  INSERT INTO Deadline (TaskID, Deadline, AlertID)
+  VALUES (_TaskID, _Deadline, _AlertID)
+  ON CONFLICT (TaskID)
+    DO UPDATE SET 
+        Deadline  = _Deadline,
+        AlertID   = _AlertID,
+        UpdatedTS = NOW();
+    
+  RETURN FOUND;
+END;
+$$ LANGUAGE PLPGSQL;
+
 
 
 */

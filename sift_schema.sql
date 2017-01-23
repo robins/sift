@@ -10,6 +10,7 @@ SET search_path = 'sift';
 CREATE TABLE Task(
   TaskID      BIGSERIAL     PRIMARY KEY,
   Name        TEXT,
+  Deadline    TIMESTAMPTZ   NOT NULL,
   CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
   UpdatedTS   TIMESTAMPTZ
 );
@@ -36,15 +37,6 @@ CREATE TABLE Alert (
   Name        TEXT,
   CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
   UpdatedTS   TIMESTAMPTZ
-);
-
-CREATE TABLE Deadline (
-  TaskID      BIGINT        UNIQUE REFERENCES Task(TaskID),
-  Deadline    INTERVAL,
-  AlertID     BIGINT        REFERENCES Alert(AlertID),
-  CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
-  UpdatedTS   TIMESTAMPTZ,
-  PRIMARY KEY (TaskID, Deadline)
 );
 
 CREATE TABLE Place(
@@ -79,5 +71,14 @@ CREATE TABLE ActinableTimeInWeek(
   UpdatedTS   TIMESTAMPTZ,
   PRIMARY KEY (TaskID, DayOfWeek)
 );
+CREATE TABLE Deadline (
+  TaskID      BIGINT        UNIQUE REFERENCES Task(TaskID),
+  Deadline    INTERVAL,
+  AlertID     BIGINT        REFERENCES Alert(AlertID),
+  CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
+  UpdatedTS   TIMESTAMPTZ,
+  PRIMARY KEY (TaskID, Deadline)
+);
+
 */
 COMMIT;
