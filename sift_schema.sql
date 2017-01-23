@@ -31,6 +31,13 @@ CREATE TABLE Duration(
 );
 
 
+CREATE TABLE Alert (
+  AlertID     BIGSERIAL     PRIMARY KEY,
+  Name        TEXT,
+  CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
+  UpdatedTS   TIMESTAMPTZ
+);
+
 CREATE TABLE Deadline (
   TaskID      BIGINT        REFERENCES Task(TaskID),
   Deadline    INTERVAL,
@@ -38,6 +45,21 @@ CREATE TABLE Deadline (
   CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
   UpdatedTS   TIMESTAMPTZ,
   PRIMARY KEY (TaskID, Deadline)
+);
+
+CREATE TABLE Place(
+  PlaceID     BIGSERIAL     PRIMARY KEY,
+  Name        TEXT,
+  CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
+  UpdatedTS   TIMESTAMPTZ
+);
+
+CREATE TABLE ActionablePlace(
+  TaskID      BIGINT        UNIQUE REFERENCES Task(TaskID),
+  PlaceID     BIGSERIAL,
+  CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
+  UpdatedTS   TIMESTAMPTZ,
+  PRIMARY KEY (TaskID, PlaceID)
 );
 
 /*
@@ -56,28 +78,6 @@ CREATE TABLE ActinableTimeInWeek(
   CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
   UpdatedTS   TIMESTAMPTZ,
   PRIMARY KEY (TaskID, DayOfWeek)
-);
-
-CREATE TABLE Place(
-  PlaceID     BIGSERIAL     PRIMARY KEY,
-  Name        TEXT,
-  CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
-  UpdatedTS   TIMESTAMPTZ
-);
-
-CREATE TABLE ActionablePlace(
-  TaskID      BIGINT        REFERENCES Task(TaskID),
-  PlaceID     BIGSERIAL,
-  CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
-  UpdatedTS   TIMESTAMPTZ,
-  PRIMARY KEY (TaskID, PlaceID)
-);
-
-CREATE TABLE Alert (
-  AlertID     BIGSERIAL     PRIMARY KEY,
-  Name        TEXT,
-  CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
-  UpdatedTS   TIMESTAMPTZ
 );
 */
 COMMIT;

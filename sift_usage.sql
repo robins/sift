@@ -1,5 +1,4 @@
 
-ROLLBACK;
 BEGIN;
 
 SET search_path = 'sift';
@@ -27,10 +26,26 @@ $$
 $$ LANGUAGE SQL;
 
 
-SELECT AddTaskDeadline(
-  GetRandomTaskID(),
-  GetRandomInterval(),
-  GetRandomAlertID()
-);
+DROP FUNCTION IF EXISTS GetRandomPlaceID();
+CREATE FUNCTION GetRandomPlaceID() 
+RETURNS BIGINT AS
+$$
+  SELECT PlaceID 
+  FROM Place
+  ORDER BY RANDOM()
+  LIMIT 1;
+$$ LANGUAGE SQL;
+
+
+DROP FUNCTION IF EXISTS GetRandomInterval();
+CREATE FUNCTION GetRandomInterval() 
+RETURNS INTERVAL AS
+$$
+  SELECT (a || ' hour')::INTERVAL 
+  FROM generate_series(1, 24) as e(a)
+  ORDER BY RANDOM()
+  LIMIT 1;
+$$ LANGUAGE SQL;
+
 
 COMMIT;
