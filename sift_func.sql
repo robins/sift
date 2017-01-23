@@ -2,13 +2,13 @@ BEGIN;
 
 SET search_path = 'sift';
 
-CREATE FUNCTION AddTask(_Description TEXT) 
+CREATE FUNCTION AddTask(_Name TEXT) 
 RETURNS BIGINT AS
 $$
-DECLARE _TaskID BIGINT DEFAULT -1;
+DECLARE _TaskID BIGINT := -1;
 BEGIN
-  INSERT INTO Task(Description)
-  VALUES (_Description)
+  INSERT INTO Task(Name)
+  VALUES (_Name)
   RETURNING TaskID
     INTO _TaskID;
   
@@ -52,7 +52,7 @@ $$
 $$ LANGUAGE SQL;
 
 
-CREATE FUNCTION AddTaskDeadline (TaskID BIGINT, Deadline INTERVAL, AlertID BIGINT)
+CREATE FUNCTION AddTaskDeadline (_TaskID BIGINT, _Deadline INTERVAL, _AlertID BIGINT)
 RETURNS BOOLEAN AS
 $$
 BEGIN
@@ -69,13 +69,31 @@ $$ LANGUAGE PLPGSQL;
 
 
 CREATE FUNCTION AddPlace(_Name TEXT)
-RETURNS BOOLEAN AS
+RETURNS BIGINT AS
 $$
+DECLARE _PlaceID BIGINT := -1;
 BEGIN
   INSERT INTO Place(Name)
-  VALUES (_Name);
+  VALUES (_Name)
+  RETURNING PlaceID
+    INTO _PlaceID;
   
-  RETURN FOUND;
+  RETURN _PlaceID;
+END;
+$$ LANGUAGE PLPGSQL;
+
+
+CREATE FUNCTION GetPlaceID(_PlaceName TEXT)
+RETURNS BIGINT AS
+$$
+DECLARE _PlaceID BIGINT := -1;
+BEGIN
+  SELECT PlaceID
+    INTO _PlaceID
+  FROM Place
+  WHERE Name = _PlaceName;
+  
+  RETURN _PlaceID;
 END;
 $$ LANGUAGE PLPGSQL;
 
@@ -87,11 +105,28 @@ BEGIN
   INSERT INTO ActionablePlace(TaskID, PlaceID)
   VALUES (_TaskID, _PlaceID)
   ON CONFLICT (TaskID)
-  DO UPDATE SET PlaceID = _PlaceID;
+  DO UPDATE SET
+    PlaceID = _PlaceID;
   
   RETURN FOUND;
 END;
 $$ LANGUAGE PLPGSQL;
+
+
+CREATE FUNCTION AddAlert (_Name TEXT)
+RETURNS BIGINT AS 
+$$
+DECLARE _AlertID BIGINT := -1;
+BEGIN
+  INSERT INTO Alert(Name)
+  VALUES (_Name)
+  RETURNING AlertID
+    INTO _AlertID;
+  
+  RETURN _AlertID;
+END;
+$$ LANGUAGE PLPGSQL;
+
 
 
 /*
@@ -111,17 +146,6 @@ CREATE FUNCTION ActinableTimeInWeek(
   UpdatedTS   TIMESTAMPTZ,
   PRIMARY KEY (TaskID, DayOfWeek)
 );
-
-CREATE FUNCTION Alert (_AlertID BIGINT, _Name TEXT)
-RETURNS BOOLEAN AS 
-$$
-BEGIN
-  INSERT INTO Alert(AlertID, Name)
-  VALUES (_AlertID, _Name);
-  
-  RETURN FOUND;
-END;
-$$ LANGUAGE PLPGSQL;
 
 
 */

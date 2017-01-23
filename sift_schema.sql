@@ -9,7 +9,7 @@ SET search_path = 'sift';
 
 CREATE TABLE Task(
   TaskID      BIGSERIAL     PRIMARY KEY,
-  Description TEXT,
+  Name        TEXT,
   CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
   UpdatedTS   TIMESTAMPTZ
 );
@@ -39,7 +39,7 @@ CREATE TABLE Alert (
 );
 
 CREATE TABLE Deadline (
-  TaskID      BIGINT        REFERENCES Task(TaskID),
+  TaskID      BIGINT        UNIQUE REFERENCES Task(TaskID),
   Deadline    INTERVAL,
   AlertID     BIGINT        REFERENCES Alert(AlertID),
   CreatedTS   TIMESTAMPTZ   DEFAULT NOW(),
