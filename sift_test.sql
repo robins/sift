@@ -11,27 +11,11 @@ SELECT AddTask1Stop(
   'SMS'                 -- Alert
 );
 
-SELECT AddTask1Stop('testing2', GetAnyFutureDate(), '2 hour'::INTERVAL, 'office', NULL);
-SELECT AddTask1Stop('testing3', GetAnyFutureDate(), '1 hour'::INTERVAL, 'office', NULL);
-SELECT AddTask1Stop('testing4', GetAnyFutureDate(), '4 hour'::INTERVAL, 'home', NULL);
+SELECT AddTask1Stop('testing2', GetAnyFutureDate(), GetRandomInterval(), 'office',  NULL);
+SELECT AddTask1Stop('testing3', GetAnyFutureDate(), GetRandomInterval(), 'office',  NULL);
+SELECT AddTask1Stop('testing4', GetAnyFutureDate(), GetRandomInterval(), 'home',    NULL);
 
-WITH x AS (
-  SELECT 
-    ROW_NUMBER() OVER () AS RowID,
-    GetPrioritizedTaskList(GetPlaceID('home')) AS TaskID
-)
-  SELECT 
-    TaskID, 
-    Task.Name AS TaskName, 
-    Deadline, 
-    Duration,
-    Place.Name
-  FROM x
-    JOIN Task             USING (TaskID)
-    JOIN ActionablePlace  USING (TaskID)
-    JOIN Duration         USING (TaskID)
-    JOIN Place            USING (PlaceID)
-  ORDER BY RowID
-;
+SELECT * FROM GetPrioritizedTaskList(GetPlaceID('home'));
+SELECT * FROM GetPrioritizedTaskList(GetPlaceID('office'));
 
 COMMIT;

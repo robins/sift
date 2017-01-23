@@ -58,28 +58,54 @@ $$
 $$ LANGUAGE SQL;
 
 DROP FUNCTION IF EXISTS GetPrioritizedTaskList(BIGINT);
-CREATE FUNCTION GetPrioritizedTaskList(_PlaceID BIGINT)
-RETURNS SETOF BIGINT AS 
+CREATE FUNCTION GetPrioritizedTaskList(
+  IN  _PlaceID  BIGINT,
+  OUT RowID     BIGINT,
+  OUT TimeSpare FLOAT,
+  OUT TaskID    BIGINT,
+  OUT TaskName  TEXT,
+  OUT Deadline  TIMESTAMPTZ,
+  OUT Duration  INTERVAL,
+  OUT PlaceName TEXT
+) RETURNS SETOF RECORD AS 
 $$
-BEGIN
-  RETURN QUERY 
+  WITH Config AS (
     SELECT 
-      TaskID
-    FROM Task
-      JOIN ActionablePlace
-        USING (TaskID)
-      JOIN Place
-        USING (PlaceID)
-    WHERE PlaceID IS NOT DISTINCT FROM _PlaceID
-    ORDER BY Deadline ASC;
-END;
-$$ LANGUAGE PLPGSQL;
-
+      1 AS HoursPerDay
+  )
+  SELECT 
+    ROW_NUMBER() OVER () AS RowID,
+    
+    -- =======================================
+    -- XXX: We need a better way to account for the fact that time available to do a task, has to take into account other tasks before *and* after it.
+    -- =======================================
+    
+    --    GREATEST(
+      (EXTRACT(EPOCH FROM Deadline) 
+        - EXTRACT(EPOCH FROM NOW())
+        - EXTRACT(EPOCH FROM (SELECT SUM(D.Duration) FROM Task T2 JOIN Duration D USING (TaskID) WHERE T2.Deadline BETWEEN NOW() AND T1.Deadline)))/3600 
+  --    ,0)
+    AS TimeSpare,
+    TaskID, 
+    T1.Name AS TaskName, 
+    Deadline, 
+    Duration,
+    Place.Name
+  FROM Config, Task T1
+    JOIN ActionablePlace  USING (TaskID)
+    JOIN Duration         USING (TaskID)
+    JOIN Place            USING (PlaceID)
+  WHERE PlaceID IS NOT DISTINCT FROM _PlaceID
+  ORDER BY TimeSpare, Deadline ASC;
+$$ LANGUAGE SQL;
 
 CREATE FUNCTION GetAnyFutureDate()
 RETURNS TIMESTAMPTZ AS
 $$
-  SELECT (NOW() + ((random() * 1000) || ' hours')::INTERVAL)::TIMESTAMPTZ
+  SELECT (NOW() + ((random() * 10) || ' hours')::INTERVAL)::TIMESTAMPTZ
 $$ LANGUAGE SQL;
+
+
+
 
 COMMIT;
