@@ -2,6 +2,8 @@ BEGIN;
 
 SET search_path = 'sift';
 
+-- XXX: If we're moving duration to another table, doesn't make sense to have deadline clubbed to Task
+
 CREATE FUNCTION AddTask(_Name TEXT, _Deadline TIMESTAMPTZ)
 RETURNS BIGINT AS
 $$
@@ -64,9 +66,29 @@ BEGIN
 END;
 $$ LANGUAGE PLPGSQL;
 
+-- Update Deadline
+-- SELECT UpdateDeadline(1, '2017/12/1');
+DROP FUNCTION IF EXISTS UpdateTaskDeadline(BIGINT);
+CREATE OR REPLACE FUNCTION UpdateTaskDeadline(_TaskID BIGINT, _Deadline TIMESTAMPTZ) RETURNS BOOLEAN AS
+$$
+BEGIN
+  UPDATE Task
+  SET Deadline = _Deadline
+  WHERE TaskID = _TaskID;
+  
+  IF FOUND THEN
+    RETURN TRUE;
+  ELSE
+    RETURN FALSE;
+  END IF;    
+END;
+$$ LANGUAGE PLPGSQL;
+
+
+
 -- Single function to add a Task (with TaskName, Deadline, Duration, Place(bucket), Alert Mechanism)
--- SELECT AddTask1Stop('TicketsBook', '2017/7/31', '1 hour', 'home');
--- SELECT AddTask1Stop('testing4', GetAnyFutureDate(), GetRandomInterval(), 'home', NULL);
+-- SELECT AddTask1Stop('BookTickets', '2017/7/31', '1 hour', 'home');
+-- SELECT AddTask1Stop('testing4', GetAnyFutureDate(), GetRandomInterval(), GetRandomPlace(), NULL);
 -- SELECT AddTask1Stop('testing4');
 DROP FUNCTION AddTask1Stop(TEXT, TIMESTAMPTZ, INTERVAL, TEXT, TEXT);
 CREATE FUNCTION AddTask1Stop(
