@@ -2,7 +2,7 @@ BEGIN;
 
 SET search_path = 'sift';
 
-CREATE FUNCTION AddTask(_Name TEXT, _Deadline TIMESTAMPTZ) 
+CREATE FUNCTION AddTask(_Name TEXT, _Deadline TIMESTAMPTZ)
 RETURNS BIGINT AS
 $$
 DECLARE _TaskID BIGINT := -1;
@@ -16,11 +16,64 @@ BEGIN
 END;
 $$ LANGUAGE PLPGSQL;
 
+
+DROP FUNCTION IF EXISTS UpdateTaskName(BIGINT, TEXT);
+CREATE FUNCTION UpdateTaskName(_TaskID BIGINT, _TaskName TEXT) RETURNS BOOLEAN AS
+$$
+BEGIN
+
+  UPDATE Task
+  SET Name = _TaskName
+  WHERE TaskID = _TaskID;
+  
+  IF FOUND THEN
+    RETURN TRUE;
+  ELSE
+    RETURN FALSE;
+  END IF;
+END;
+$$ LANGUAGE PLPGSQL;
+
+
+-- Remove an existing Task 
+-- SELECT RemoveTask(1);
+-- SELECT RemoveTask(GetRandomTaskID());
+DROP FUNCTION IF EXISTS RemoveTask(BIGINT);
+CREATE FUNCTION RemoveTask(_TaskID BIGINT) RETURNS BOOLEAN AS
+$$
+BEGIN
+
+  DELETE FROM ActionablePlace
+  WHERE TaskID = _TaskID;
+
+  IF FOUND THEN
+    DELETE FROM Duration
+    WHERE TaskID = _TaskID;
+
+    IF FOUND THEN
+      DELETE FROM Task
+      WHERE TaskID = _TaskID;
+
+      IF FOUND THEN
+        RETURN TRUE;
+      END IF;
+    END IF;
+  END IF;
+
+  RETURN FALSE;
+END;
+$$ LANGUAGE PLPGSQL;
+
+-- Single function to add a Task (with TaskName, Deadline, Duration, Place(bucket), Alert Mechanism)
+-- SELECT AddTask1Stop('TicketsBook', '2017/7/31', '1 hour', 'home');
+-- SELECT AddTask1Stop('testing4', GetAnyFutureDate(), GetRandomInterval(), 'home', NULL);
+-- SELECT AddTask1Stop('testing4');
+DROP FUNCTION AddTask1Stop(TEXT, TIMESTAMPTZ, INTERVAL, TEXT, TEXT);
 CREATE FUNCTION AddTask1Stop(
   _TaskName TEXT,
-  _Deadline TIMESTAMPTZ DEFAULT NULL,
-  _Duration INTERVAL    DEFAULT NULL,
-  _Place    TEXT        DEFAULT NULL,
+  _Deadline TIMESTAMPTZ DEFAULT NOW() + '1 day'::INTERVAL,
+  _Duration INTERVAL    DEFAULT '1 hour'::INTERVAL,
+  _Place    TEXT        DEFAULT 'home',
   _Alert    TEXT        DEFAULT NULL
 )
 RETURNS BIGINT AS

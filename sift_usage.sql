@@ -87,7 +87,7 @@ $$
   --    ,0)
     AS TimeSpare,
     TaskID, 
-    T1.Name AS TaskName, 
+    T1.Name || ' (' || TaskID || ')' AS TaskName, 
     Deadline, 
     Duration,
     Place.Name
